@@ -5,6 +5,7 @@ export default function RecordsList() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Fetch records
   const fetch = async () => {
     setLoading(true);
     try {
@@ -23,25 +24,12 @@ export default function RecordsList() {
     fetch();
   }, []);
 
-  const handleDownload = async (r) => {
-    try {
-      const res = await fileAPI.downloadFileById(r.id || r._id);
-      const blob = res.data;
-      const url = window.URL.createObjectURL(new Blob([blob]));
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = r.originalName || r.name || "file";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error(err);
-      if (r.driveLink) {
-        window.open(r.driveLink, "_blank");
-      } else {
-        alert("Download failed");
-      }
+  // Frontend-only open/download using driveLink
+  const handleDownload = (r) => {
+    if (r.driveLink) {
+      window.open(r.driveLink, "_blank");
+    } else {
+      alert("No download link available for this file");
     }
   };
 
@@ -92,7 +80,7 @@ export default function RecordsList() {
                 </td>
                 <td>
                   <button onClick={() => handleDownload(r)}>
-                    Download / Open
+                    Open / Download
                   </button>
                 </td>
               </tr>
@@ -103,6 +91,7 @@ export default function RecordsList() {
     </div>
   );
 }
+
 
 
 
