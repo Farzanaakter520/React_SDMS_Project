@@ -9,6 +9,7 @@ const UploadForm = () => {
     doctor_id: "",
     document_type: "",
     remarks: "",
+    drive_file_id: "",
 
   });
 
