@@ -6,9 +6,10 @@ const UploadForm = () => {
     patient_id: "",
     admission_id: "",
     hospital_id: "",
+    doctor_id: "",
     document_type: "",
     remarks: "",
-    doctor_id: "",
+
   });
 
   const [file, setFile] = useState(null);
@@ -25,7 +26,7 @@ const UploadForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData();
-    data.append("action_mode", "upload"); // backend expect করে
+    data.append("action_mode", "upload");
     Object.keys(formData).forEach((key) => data.append(key, formData[key]));
     if (file) data.append("file", file, file.name);
 
@@ -63,6 +64,14 @@ const UploadForm = () => {
         value={formData.hospital_id}
         onChange={handleChange}
         placeholder="Hospital ID"
+        required
+      />
+      <input
+        type="number"
+        name="doctor_id"
+        value={formData.doctor_id}
+        onChange={handleChange}
+        placeholder="Doctor ID"
         required
       />
       <select
