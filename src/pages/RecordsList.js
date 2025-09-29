@@ -1,3 +1,4 @@
+/*
 import React, { useEffect, useState } from "react";
 import fileAPI from "../services/fileAPI";
 
@@ -83,11 +84,10 @@ export default function RecordsList() {
     </div>
   );
 }
+}*/
 
 
-
-
-/*import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import fileAPI from "../services/fileAPI";
 
 export default function RecordsList() {
@@ -113,15 +113,32 @@ export default function RecordsList() {
     fetch();
   }, []);
 
-  // Frontend-only open/download using driveLink
-  const handleDownload = (r) => {
-    if (r.driveLink) {
-      window.open(r.driveLink, "_blank");
-    } else {
-      alert("No download link available for this file");
+  // Backend API download/open
+  const handleOpenDownload = async (r) => {
+    try {
+      // Call backend API
+      const blob = await fileAPI.downloadFileById(r.id || r._id, r.patient_id, r.admission_id);
+
+      // Create temporary URL and open in new tab
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const a = document.createElement("a");
+      a.href = url;
+
+      // Open in new tab for PDF preview
+      a.target = "_blank";
+
+      // Suggest download name
+      a.download = r.file_name || "file.pdf";
+
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download/Open failed:", err);
+      alert("Download/Open failed. Please check console.");
     }
   };
-  
 
   return (
     <div style={{ maxWidth: 1200, margin: "1rem auto", padding: 20 }}>
@@ -144,7 +161,6 @@ export default function RecordsList() {
               <th>Doctor ID</th>
               <th>Document Type</th>
               <th>Remarks</th>
-              <th>Drive Link</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -152,17 +168,15 @@ export default function RecordsList() {
             {records.map((r) => (
               <tr key={r.id || r._id}>
                 <td>{r.id || r._id}</td>
-                <td>{r.originalName || r.name}</td>
+                <td>{r.file_name}</td>
                 <td>{r.patient_id}</td>
                 <td>{r.admission_id}</td>
                 <td>{r.hospital_id}</td>
                 <td>{r.doctor_id}</td>
                 <td>{r.document_type}</td>
                 <td>{r.remarks}</td>
-                <td>{r.driveLink ? <a href={r.driveLink}>Open in Drive</a> : '—'}</td>
-
                 <td>
-                  <button onClick={() => handleDownload(r)}>
+                  <button onClick={() => handleOpenDownload(r)}>
                     Open / Download
                   </button>
                 </td>
@@ -173,6 +187,4 @@ export default function RecordsList() {
       )}
     </div>
   );
-}*/
-
-
+}
