@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import fileAPI from "../services/fileAPI";
+import "./RecordsList.css";
 
 export default function RecordsList() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch records
   const fetch = async () => {
     setLoading(true);
     try {
@@ -24,23 +24,14 @@ export default function RecordsList() {
     fetch();
   }, []);
 
-  // Backend API download/open
   const handleOpenDownload = async (r) => {
     try {
-      // Call backend API
       const blob = await fileAPI.downloadFileById(r.id || r._id, r.patient_id, r.admission_id);
-
-      // Create temporary URL and open in new tab
       const url = window.URL.createObjectURL(new Blob([blob]));
       const a = document.createElement("a");
       a.href = url;
-
-      // Open in new tab for PDF preview
       a.target = "_blank";
-
-      // Suggest download name
       a.download = r.file_name || "file.pdf";
-
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -52,16 +43,12 @@ export default function RecordsList() {
   };
 
   return (
-    <div style={{ maxWidth: 1200, margin: "1rem auto", padding: 20 }}>
+    <div className="records-container">
       <h2>Records</h2>
       {loading ? (
-        <div>Loading...</div>
+        <div style={{ textAlign: "center", padding: "1rem" }}>Loading...</div>
       ) : (
-        <table
-          border="1"
-          cellPadding="8"
-          style={{ width: "100%", borderCollapse: "collapse" }}
-        >
+        <table className="records-table">
           <thead>
             <tr>
               <th>ID</th>
@@ -87,7 +74,10 @@ export default function RecordsList() {
                 <td>{r.document_type}</td>
                 <td>{r.remarks}</td>
                 <td>
-                  <button onClick={() => handleOpenDownload(r)}>
+                  <button
+                    className="action-btn"
+                    onClick={() => handleOpenDownload(r)}
+                  >
                     Open / Download
                   </button>
                 </td>
