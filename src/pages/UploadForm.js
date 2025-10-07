@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import fileAPI from "../services/fileAPI";
-import "./UploadForm.css"; 
+import "../cssFiles//UploadForm.css";
 
 const UploadForm = () => {
   const [formData, setFormData] = useState({
@@ -10,10 +10,9 @@ const UploadForm = () => {
     doctor_id: "",
     document_type: "",
     remarks: "",
-    drive_file_id: "",
   });
 
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [message, setMessage] = useState("");
 
   const handleChange = (e) => {
@@ -21,21 +20,23 @@ const UploadForm = () => {
   };
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+    setFiles(e.target.files); // multiple files
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    if (!files.length) return setMessage("Please select at least one file");
+
     const data = new FormData();
-    data.append("action_mode", "upload");
     Object.keys(formData).forEach((key) => data.append(key, formData[key]));
-    if (file) data.append("file", file, file.name);
+    for (let i = 0; i < files.length; i++) {
+      data.append("files", files[i]); // backend expects "files" array
+    }
 
     try {
       const res = await fileAPI.submitRecordWithFile(data);
-      console.log("Upload Success:", res.data);
-      setMessage("File uploaded successfully!");
+      console.log("Upload Success:", res);
+      setMessage("Files uploaded successfully!");
       setFormData({
         patient_id: "",
         admission_id: "",
@@ -43,9 +44,8 @@ const UploadForm = () => {
         doctor_id: "",
         document_type: "",
         remarks: "",
-        drive_file_id: "",
       });
-      setFile(null);
+      setFiles([]);
     } catch (err) {
       console.error("Upload Failed:", err);
       setMessage("Upload failed!");
@@ -54,46 +54,13 @@ const UploadForm = () => {
 
   return (
     <div className="upload-container">
-      <h2 className="upload-title">Upload Post-Op Document</h2>
+      <h2>Upload Post-Op Documents</h2>
       <form onSubmit={handleSubmit} className="upload-form">
-        <input
-          type="number"
-          name="patient_id"
-          value={formData.patient_id}
-          onChange={handleChange}
-          placeholder="Patient ID"
-          required
-        />
-        <input
-          type="number"
-          name="admission_id"
-          value={formData.admission_id}
-          onChange={handleChange}
-          placeholder="Admission ID"
-          required
-        />
-        <input
-          type="number"
-          name="hospital_id"
-          value={formData.hospital_id}
-          onChange={handleChange}
-          placeholder="Hospital ID"
-          required
-        />
-        <input
-          type="number"
-          name="doctor_id"
-          value={formData.doctor_id}
-          onChange={handleChange}
-          placeholder="Doctor ID"
-          required
-        />
-        <select
-          name="document_type"
-          value={formData.document_type}
-          onChange={handleChange}
-          required
-        >
+        <input type="number" name="patient_id" value={formData.patient_id} onChange={handleChange} placeholder="Patient ID" required />
+        <input type="number" name="admission_id" value={formData.admission_id} onChange={handleChange} placeholder="Admission ID" required />
+        <input type="number" name="hospital_id" value={formData.hospital_id} onChange={handleChange} placeholder="Hospital ID" required />
+        <input type="number" name="doctor_id" value={formData.doctor_id} onChange={handleChange} placeholder="Doctor ID" required />
+        <select name="document_type" value={formData.document_type} onChange={handleChange} required>
           <option value="">--Select Document Type--</option>
           <option value="x-ray">X-Ray</option>
           <option value="diagnostic_report">Diagnostic Report</option>
@@ -104,13 +71,8 @@ const UploadForm = () => {
           <option value="imaging">Imaging</option>
           <option value="other">Other</option>
         </select>
-        <textarea
-          name="remarks"
-          value={formData.remarks}
-          onChange={handleChange}
-          placeholder="Remarks"
-        />
-        <input type="file" onChange={handleFileChange} required />
+        <textarea name="remarks" value={formData.remarks} onChange={handleChange} placeholder="Remarks" />
+        <input type="file" multiple onChange={handleFileChange} required />
         <button type="submit">Upload</button>
       </form>
       {message && <p className="upload-message">{message}</p>}
