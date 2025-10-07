@@ -1,4 +1,4 @@
-.upload-container {
+/* .upload-container {
   max-width: 500px;
   margin: 2.5rem auto;
   padding: 2rem;
@@ -90,4 +90,73 @@ body {
   backdrop-filter: blur(5px);
   border-radius: 16px;
   padding: 2rem;
+} */
+body {
+  background: url("https://wallpapers.com/images/featured/doctor-motivation-b5wjlwe5wjikoj7t.jpg") no-repeat center center fixed;
+  background-size: cover;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.upload-container {
+  max-width: 600px;
+  margin: 3rem auto;
+  padding: 2rem;
+  border-radius: 16px;
+  background: rgba(250, 250, 250, 0.85);
+  backdrop-filter: blur(5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.upload-title {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.upload-form input,
+.upload-form select,
+.upload-form textarea {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.upload-form input:focus,
+.upload-form select:focus,
+.upload-form textarea:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 6px rgba(74, 144, 226, 0.3);
+}
+
+.upload-form button {
+  padding: 12px;
+  background: linear-gradient(135deg, #4a90e2, #357ABD);
+  color: white;
+  font-weight: 500;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-form button:hover {
+  background: linear-gradient(135deg, #357ABD, #2d5f9c);
+  transform: translateY(-2px);
+}
+
+.upload-message {
+  text-align: center;
+  font-weight: 600;
+  color: #28a745;
+  margin-top: 1rem;
 }

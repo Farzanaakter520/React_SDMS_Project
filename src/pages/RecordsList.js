@@ -9,7 +9,7 @@ export default function RecordsList() {
   const fetchRecords = async () => {
     setLoading(true);
     try {
-      const res = await fileAPI.listRecords(); // backend call
+      const res = await fileAPI.listRecords(); // backend call to get records
       if (res.success && res.data) {
         const grouped = {};
 
@@ -26,7 +26,7 @@ export default function RecordsList() {
           grouped[key].files.push({
             fileId: item.drive_file_id,
             name: item.file_name,
-            webViewLink: `https://drive.google.com/file/d/${item.drive_file_id}/view?usp=drivesdk`
+            webViewLink: `https://drive.google.com/uc?export=download&id=${item.drive_file_id}`
           });
         });
 
@@ -40,9 +40,14 @@ export default function RecordsList() {
     }
   };
 
-  const handleOpenFile = (file) => {
-    if (file.webViewLink) window.open(file.webViewLink, "_blank");
-    else alert("No file link available");
+  // Direct download from Google Drive
+  const handleDownloadFile = (file) => {
+    const link = document.createElement("a");
+    link.href = file.webViewLink;
+    link.setAttribute("download", file.name);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   useEffect(() => {
@@ -80,10 +85,10 @@ export default function RecordsList() {
               <td>{record.remarks}</td>
               <td>
                 {record.files && record.files.length > 0 ? (
-                  record.files.map(file => (
+                  record.files.map((file) => (
                     <button
                       key={file.fileId}
-                      onClick={() => handleOpenFile(file)}
+                      onClick={() => handleDownloadFile(file)}
                       style={{ display: "block", marginBottom: "5px", cursor: "pointer" }}
                     >
                       {file.name}
@@ -100,6 +105,9 @@ export default function RecordsList() {
     </div>
   );
 }
+
+
+
 
 
 // import React, { useEffect, useState } from "react";
