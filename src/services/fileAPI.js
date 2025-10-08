@@ -39,10 +39,23 @@ const downloadFileById = async (file_id, patient_id, admission_id) => {
   }
 };
 
+// ✅ New preview function
+const previewFileById = (drive_file_id) => {
+  try {
+    const previewLink = `${API_URL}preview?file_id=${drive_file_id}`;
+    window.open(previewLink, "_blank"); 
+  } catch (error) {
+    console.error("Preview Error:", error);
+    throw error;
+  }
+};
+
+
 const fileAPI = {
   submitRecordWithFile,
   listRecords,
   downloadFileById,
+  previewFileById, // <-- add this
 };
 
 export default fileAPI;

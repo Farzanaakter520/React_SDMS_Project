@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import fileAPI from "../services/fileAPI";
-import '../cssFiles/RecordsList.css';
+import "../cssFiles/RecordsList.css";
+import axios from "axios";
 
 export default function RecordsList() {
   const [records, setRecords] = useState([]);
@@ -14,18 +15,13 @@ export default function RecordsList() {
         const grouped = {};
 
         // Group by patient_id + admission_id
-        res.data.forEach(item => {
+        res.data.forEach((item) => {
           const key = `${item.patient_id}_${item.admission_id}`;
-          if (!grouped[key]) {
-            grouped[key] = {
-              ...item,
-              files: []
-            };
-          }
+          if (!grouped[key]) grouped[key] = { ...item, files: [] };
+
           grouped[key].files.push({
-            fileId: item.drive_file_id,
+            drive_file_id: item.drive_file_id,
             name: item.file_name,
-            webViewLink: `https://drive.google.com/uc?export=download&id=${item.drive_file_id}`
           });
         });
 
@@ -39,36 +35,50 @@ export default function RecordsList() {
     }
   };
 
-  const handleDownloadFile = async (file) => {
-    try {
-      const response = await fetch("http://localhost:8000/api/v1/fileupload/fileuploadapi/download", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ drive_file_id: file.fileId, file_name: file.name })
-      });
+//   const handlePreviewFile = async (file) => {
+//   if (!file.drive_file_id) return alert("File ID missing!");
+//   try {
+//     const response = await axios.post(
+//       "http://localhost:8000/api/v1/fileupload/fileuploadapi/preview",
+//       { drive_file_id: file.drive_file_id },
+//       { responseType: "blob" }
+//     );
 
-      if (!response.ok) {
-        const text = await response.text();
-        console.error("Server Response:", text);
-        throw new Error("Download failed");
-      }
+//     const blob = new Blob([response.data], { type: response.data.type || 'application/octet-stream' });
+//     const url = window.URL.createObjectURL(blob);
+//     window.open(url, "_blank");
+//   } catch (err) {
+//     console.error("Preview failed:", err);
+//     alert("Preview failed! Check console.");
+//   }
+// };
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file.name || "downloaded_file";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Download failed:", error);
-      alert("Download failed! Check backend logs.");
-    }
-  };
+const handlePreviewFile = async (file) => {
+  if (!file.drive_file_id) return alert("File ID missing!");
 
+  try {
+    const response = await axios.post(
+      "http://localhost:8000/api/v1/fileupload/fileuploadapi/preview",
+      { drive_file_id: file.drive_file_id },
+      { responseType: "blob" } // ensure we get binary data
+    );
 
+    // Force the blob type as PDF
+    const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+
+    // Create a temporary object URL for the PDF
+    const pdfUrl = window.URL.createObjectURL(pdfBlob);
+
+    // Open in new tab
+    window.open(pdfUrl, "_blank");
+
+    // Optional: clean up URL after a few seconds
+    setTimeout(() => window.URL.revokeObjectURL(pdfUrl), 10000);
+  } catch (error) {
+    console.error("Preview Error:", error);
+    alert("Preview failed");
+  }
+};
 
 
   useEffect(() => {
@@ -108,11 +118,11 @@ export default function RecordsList() {
                 {record.files && record.files.length > 0 ? (
                   record.files.map((file) => (
                     <button
-                      key={file.fileId}
-                      onClick={() => handleDownloadFile(file)}
+                      key={file.drive_file_id}
+                      onClick={() => handlePreviewFile(file)}
                       className="download-btn"
                     >
-                      ⬇️ {file.name}
+                      👁️ {file.name}
                     </button>
                   ))
                 ) : (
@@ -126,6 +136,9 @@ export default function RecordsList() {
     </div>
   );
 }
+
+
+
 
 
 
