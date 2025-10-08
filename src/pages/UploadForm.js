@@ -22,7 +22,7 @@ export default function PostOpDocs() {
     if (!files.length) return setMessage("Please select at least one file");
 
     const data = new FormData();
-    data.append("action_mode", "add"); // ✅ Add this for backend
+    data.append("action_mode", "upload"); // ✅ Add this for backend
     Object.keys(formData).forEach(key => data.append(key, formData[key]));
     for (let i = 0; i < files.length; i++) data.append("files", files[i]);
 
