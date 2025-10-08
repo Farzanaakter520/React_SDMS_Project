@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import fileAPI from "../services/fileAPI";
 import "../cssFiles/RecordsList.css";
-import axios from "axios";
 
 export default function RecordsList() {
   const [records, setRecords] = useState([]);
@@ -21,7 +21,8 @@ export default function RecordsList() {
 
           grouped[key].files.push({
             drive_file_id: item.drive_file_id,
-            name: item.file_name,
+            file_name: item.file_name,
+            file_type: item.file_type, // important for preview type
           });
         });
 
@@ -35,51 +36,39 @@ export default function RecordsList() {
     }
   };
 
-//   const handlePreviewFile = async (file) => {
-//   if (!file.drive_file_id) return alert("File ID missing!");
-//   try {
-//     const response = await axios.post(
-//       "http://localhost:8000/api/v1/fileupload/fileuploadapi/preview",
-//       { drive_file_id: file.drive_file_id },
-//       { responseType: "blob" }
-//     );
+  // ✅ Preview function for PDF, video, image
+  const handlePreviewFile = async (file) => {
+    if (!file.drive_file_id) return alert("File ID missing!");
 
-//     const blob = new Blob([response.data], { type: response.data.type || 'application/octet-stream' });
-//     const url = window.URL.createObjectURL(blob);
-//     window.open(url, "_blank");
-//   } catch (err) {
-//     console.error("Preview failed:", err);
-//     alert("Preview failed! Check console.");
-//   }
-// };
+    try {
+      const response = await axios.post(
+        "http://localhost:8000/api/v1/fileupload/fileuploadapi/preview",
+        { drive_file_id: file.drive_file_id },
+        { responseType: "blob" }
+      );
 
-const handlePreviewFile = async (file) => {
-  if (!file.drive_file_id) return alert("File ID missing!");
+      let mimeType = "application/octet-stream"; // fallback
 
-  try {
-    const response = await axios.post(
-      "http://localhost:8000/api/v1/fileupload/fileuploadapi/preview",
-      { drive_file_id: file.drive_file_id },
-      { responseType: "blob" } // ensure we get binary data
-    );
+      if (file.file_type === "pdf") mimeType = "application/pdf";
+      else if (file.file_type === "mp4") mimeType = "video/mp4";
+      else if (file.file_type === "mov") mimeType = "video/quicktime";
+      else if (file.file_type === "avi") mimeType = "video/x-msvideo";
+      else if (file.file_type === "mkv") mimeType = "video/x-matroska";
+      else if (file.file_type === "jpg" || file.file_type === "jpeg")
+        mimeType = "image/jpeg";
+      else if (file.file_type === "png") mimeType = "image/png";
 
-    // Force the blob type as PDF
-    const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+      const blob = new Blob([response.data], { type: mimeType });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, "_blank");
 
-    // Create a temporary object URL for the PDF
-    const pdfUrl = window.URL.createObjectURL(pdfBlob);
-
-    // Open in new tab
-    window.open(pdfUrl, "_blank");
-
-    // Optional: clean up URL after a few seconds
-    setTimeout(() => window.URL.revokeObjectURL(pdfUrl), 10000);
-  } catch (error) {
-    console.error("Preview Error:", error);
-    alert("Preview failed");
-  }
-};
-
+      // Optional: revoke after 10 seconds
+      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+    } catch (error) {
+      console.error("Preview Error:", error);
+      alert("Preview failed");
+    }
+  };
 
   useEffect(() => {
     fetchRecords();
@@ -122,7 +111,7 @@ const handlePreviewFile = async (file) => {
                       onClick={() => handlePreviewFile(file)}
                       className="download-btn"
                     >
-                      👁️ {file.name}
+                      👁️ {file.file_name}
                     </button>
                   ))
                 ) : (
@@ -136,6 +125,7 @@ const handlePreviewFile = async (file) => {
     </div>
   );
 }
+
 
 
 
