@@ -9,7 +9,7 @@ export default function RecordsList() {
   const fetchRecords = async () => {
     setLoading(true);
     try {
-      const res = await fileAPI.listRecords(); // backend call to get records
+      const res = await fileAPI.listRecords();
       if (res.success && res.data) {
         const grouped = {};
 
@@ -22,7 +22,6 @@ export default function RecordsList() {
               files: []
             };
           }
-          // push each file into files array
           grouped[key].files.push({
             fileId: item.drive_file_id,
             name: item.file_name,
@@ -40,15 +39,37 @@ export default function RecordsList() {
     }
   };
 
-  // Direct download from Google Drive
-  const handleDownloadFile = (file) => {
-    const link = document.createElement("a");
-    link.href = file.webViewLink;
-    link.setAttribute("download", file.name);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadFile = async (file) => {
+    try {
+      const response = await fetch("http://localhost:8000/api/v1/fileupload/fileuploadapi/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ drive_file_id: file.fileId, file_name: file.name })
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.error("Server Response:", text);
+        throw new Error("Download failed");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = file.name || "downloaded_file";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert("Download failed! Check backend logs.");
+    }
   };
+
+
+
 
   useEffect(() => {
     fetchRecords();
@@ -89,9 +110,9 @@ export default function RecordsList() {
                     <button
                       key={file.fileId}
                       onClick={() => handleDownloadFile(file)}
-                      style={{ display: "block", marginBottom: "5px", cursor: "pointer" }}
+                      className="download-btn"
                     >
-                      {file.name}
+                      ⬇️ {file.name}
                     </button>
                   ))
                 ) : (
@@ -105,6 +126,7 @@ export default function RecordsList() {
     </div>
   );
 }
+
 
 
 
