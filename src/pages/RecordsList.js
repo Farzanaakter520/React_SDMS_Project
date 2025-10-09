@@ -1,57 +1,60 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import fileAPI from "../services/fileAPI";
 import "../cssFiles/RecordsList.css";
 
-// Full-page preview (alert-style modal)
-function FullPagePreview({ open, onClose, fileName, base64, contentType }) {
+// ===== Full-page PDF Preview (video style) =====
+function FullPagePdfModal({ open, onClose, fileName, base64, contentType }) {
   if (!open) return null;
 
   const dataUrl = `data:${contentType};base64,${base64}`;
 
   return (
-    <div className="fullpage-overlay" onClick={onClose}>
-      <div
-        className="fullpage-content"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex justify-between items-center mb-4 border-b pb-2 text-gray-800 text-2x2 font-semibold">
-          <h2 className="text-2xl font-semibold text-gray-800">{fileName}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-black text-2xl font-bold"
-          >
-            ✕
-          </button>
+    <div className="pdf-modal-overlay">
+      <div className="pdf-modal-content">
+        {/* Header: PDF name + cross */}
+        <div className="pdf-modal-header">
+          <span className="pdf-modal-name">{fileName}</span>
+          <button className="pdf-modal-close" onClick={onClose}>✕</button>
         </div>
 
-        {/* File Preview */}
-        <div className="pdf-preview-area">
-          {contentType === "application/pdf" ? (
-            <iframe
-              src={dataUrl}
-              className="pdf-full-view"
-              title={fileName}
-            />
-          ) : contentType.startsWith("image/") ? (
-            <img src={dataUrl} alt={fileName} className="img-full-view" />
-          ) : contentType.startsWith("video/") ? (
-            <video src={dataUrl} controls className="img-full-view" />
-          ) : (
-            <object data={dataUrl} type={contentType} className="pdf-full-view">
-              <p className="text-gray-500 text-sm">
-                Cannot preview this file type.
-              </p>
-            </object>
-          )}
-        </div>
+        {/* PDF view without toolbar */}
+        <iframe
+          src={`${dataUrl}#toolbar=0`}
+          className="pdf-modal-iframe"
+          title={fileName}
+        />
       </div>
     </div>
   );
 }
 
-// MIME type helper
+// ===== Full-page Video Preview =====
+function FullPageVideoModal({ open, onClose, fileName, base64, contentType }) {
+  if (!open) return null;
+
+  const videoSrc = `data:${contentType};base64,${base64}`;
+
+  return (
+    <div className="pdf-modal-overlay">
+      <div className="pdf-modal-content">
+        {/* Header */}
+        <div className="pdf-modal-header">
+          <span className="pdf-modal-name">{fileName}</span>
+          <button className="pdf-modal-close" onClick={onClose}>✕</button>
+        </div>
+
+        {/* Video */}
+        <video className="pdf-modal-video" controls autoPlay>
+          <source src={videoSrc} type={contentType} />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  );
+}
+
+// ===== MIME type helper =====
 const getContentType = (fileType) => {
   const typeMap = {
     pdf: "application/pdf",
@@ -62,17 +65,19 @@ const getContentType = (fileType) => {
     webp: "image/webp",
     mp4: "video/mp4",
     webm: "video/webm",
-    mp3: "audio/mpeg",
+    avi: "video/x-msvideo",
   };
   return typeMap[fileType?.toLowerCase()] || "application/octet-stream";
 };
 
+// ===== Main RecordsList Component =====
 export default function RecordsList() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Preview state
-  const [open, setOpen] = useState(false);
+  const [openPdf, setOpenPdf] = useState(false);
+  const [openVideo, setOpenVideo] = useState(false);
   const [fileName, setFileName] = useState("");
   const [base64, setBase64] = useState(null);
   const [contentType, setContentType] = useState(null);
@@ -129,7 +134,15 @@ export default function RecordsList() {
       setFileName(file.file_name);
       setContentType(mimeType);
       setBase64(base64Data);
-      setOpen(true);
+
+      // detect file type and open accordingly
+      if (mimeType.startsWith("video/")) {
+        setOpenVideo(true);
+      } else if (mimeType === "application/pdf") {
+        setOpenPdf(true);
+      } else {
+        alert("Only video and PDF preview supported for now!");
+      }
     } catch (error) {
       console.error(error);
       alert("Preview failed");
@@ -172,7 +185,7 @@ export default function RecordsList() {
                     onClick={() => handlePreviewFile(file)}
                     className="action-btn"
                   >
-                     {file.file_name}
+                    {file.file_name}
                   </button>
                 ))}
               </td>
@@ -181,9 +194,18 @@ export default function RecordsList() {
         </tbody>
       </table>
 
-      <FullPagePreview
-        open={open}
-        onClose={() => setOpen(false)}
+      {/* PDF and Video Modals */}
+      <FullPagePdfModal
+        open={openPdf}
+        onClose={() => setOpenPdf(false)}
+        fileName={fileName}
+        base64={base64}
+        contentType={contentType}
+      />
+
+      <FullPageVideoModal
+        open={openVideo}
+        onClose={() => setOpenVideo(false)}
         fileName={fileName}
         base64={base64}
         contentType={contentType}
@@ -191,9 +213,6 @@ export default function RecordsList() {
     </div>
   );
 }
-
-
-
 
 
 
